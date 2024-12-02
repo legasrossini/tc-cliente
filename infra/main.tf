@@ -48,7 +48,7 @@ resource "aws_instance" "app" {
   instance_type = "t3.micro"
 
   tags = {
-    Name = "AppInstance"
+    Name = "tc-cliente"
   }
 
   # Use o local para determinar o grupo de segurança
