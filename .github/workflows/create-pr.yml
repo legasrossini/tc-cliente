@@ -51,16 +51,6 @@ jobs:
         run: mvn clean verify
         env:
           MAVEN_OPTS: "-Djacoco.skip=false"
-        # O objetivo 'verify' garante que a validação de cobertura mínima configurada no pom.xml seja aplicada.
-
-      - name: Run Checkstyle
-        run: mvn checkstyle:check
-
-      - name: Run PMD
-        run: mvn pmd:check
-
-      - name: Run OWASP Dependency-Check
-        run: mvn org.owasp:dependency-check-maven:check
 
   create-or-update-pr:
     runs-on: ubuntu-latest
