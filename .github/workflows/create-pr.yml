@@ -30,16 +30,6 @@ jobs:
           git pull origin develop
           git fetch origin ${{ github.event.pull_request.head.ref }}:${{ github.event.pull_request.head.ref }}
 
-      - name: Merge PR to Develop
-        if: ${{ success() }}
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git merge --no-ff ${{ github.event.pull_request.head.ref }}
-          git push origin develop
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   test-and-validate:
     runs-on: ubuntu-latest
     needs: terraform-validate
@@ -76,8 +66,15 @@ jobs:
       - name: Run OWASP Dependency-Check
         run: mvn org.owasp:dependency-check-maven:check
 
+  create-or-update-pr:
+    runs-on: ubuntu-latest
+    needs: test-and-validate
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
       - name: Create or Update Pull Request to Main
-        if: ${{ success() }}
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.PAT }}
