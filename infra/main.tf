@@ -42,10 +42,10 @@ resource "aws_security_group" "app_sg" {
   }
 }
 
-resource "aws_spot_instance_request" "app" {
-  ami           = length(data.aws_ami.existing_ami.id) > 0 ? data.aws_ami.existing_ami.id : aws_ami_from_instance.app_ami[0].id
+# Criar a instância EC2 usando a AMI padrão
+resource "aws_instance" "app" {
+  ami           = var.base_ami_id
   instance_type = "t3.micro"
-  spot_price    = "0.005"
 
   tags = {
     Name = "tc-cliente"
