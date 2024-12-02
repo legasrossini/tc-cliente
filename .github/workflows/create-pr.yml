@@ -47,20 +47,11 @@ jobs:
       - name: Build with Maven
         run: mvn clean install
 
-      - name: Run tests and generate JaCoCo report
-        run: mvn test jacoco:report
-
-      - name: Check JaCoCo coverage
-        run: |
-          COVERAGE=$(mvn jacoco:report | grep -oP 'Total.*?(\d+)%' | grep -oP '\d+')
-          if [ -z "$COVERAGE" ]; then
-            echo "Failed to extract code coverage percentage"
-            exit 1
-          fi
-          if [ "$COVERAGE" -lt 80 ]; then
-            echo "Code coverage is below 80%: $COVERAGE%"
-            exit 1
-          fi
+      - name: Run tests and enforce JaCoCo coverage
+        run: mvn clean verify
+        env:
+          MAVEN_OPTS: "-Djacoco.skip=false"
+        # O objetivo 'verify' garante que a validação de cobertura mínima configurada no pom.xml seja aplicada.
 
       - name: Run Checkstyle
         run: mvn checkstyle:check
