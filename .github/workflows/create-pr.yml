@@ -1,4 +1,4 @@
-name: Validate Terraform and Create Pull Request
+name: Validates and Create Pull Request
 
 on:
   pull_request:
@@ -17,10 +17,14 @@ jobs:
         uses: hashicorp/setup-terraform@v1
 
       - name: Terraform Init
-        run: terraform init
+        run: |
+          cd infra
+          terraform init
 
       - name: Terraform Validate
-        run: terraform validate
+        run: |
+          cd infra
+          terraform validate
 
       - name: Fetch and Checkout Branches
         if: ${{ success() }}
