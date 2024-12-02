@@ -4,12 +4,10 @@ provider "aws" {
   secret_key = var.aws_secret_key
 }
 
-resource "aws_instance" "app" {
+resource "aws_spot_instance_request" "app" {
   ami           = "ami-0c55b159cbfafe1f0" # Amazon Linux 2 AMI (HVM)
   instance_type = "t3.micro"
-
-  # Configuração para instância spot
-  spot_price = "0.005"
+  spot_price    = "0.005"
 
   tags = {
     Name = "tc-cliente"
