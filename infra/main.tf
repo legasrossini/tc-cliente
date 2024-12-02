@@ -58,3 +58,9 @@ data "aws_ami" "existing_ami" {
 # Criar a AMI apenas se ela não existir
 resource "aws_ami_from_instance" "app_ami" {
   count              = length(data.aws_ami.existing_ami.id) == 0 ? 1 : 0
+  name               = "app-ami"
+  source_instance_id = aws_instance.source_instance.id
+  tags = {
+    Name = "AppAMI"
+  }
+}
