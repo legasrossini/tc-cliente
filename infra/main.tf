@@ -13,7 +13,7 @@ data "aws_security_group" "existing_sg" {
 }
 
 resource "aws_security_group" "app_sg" {
-  count       = length(data.aws_security_group.existing_sg.id) == 0 ? 1 : 0
+  count       = length(data.aws_security_group.existing_sg.ids) == 0 ? 1 : 0
   name        = "app_sg"
   description = "Allow HTTP and SSH"
 
@@ -34,4 +34,35 @@ resource "aws_security_group" "app_sg" {
   egress {
     from_port   = 0
     to_port     = 0
-    protocol    =
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_instance" "source_instance" {
+  ami           = var.base_ami_id
+  instance_type = "t3.micro"
+  tags = {
+    Name = "SourceInstance"
+  }
+}
+
+resource "aws_ami_from_instance" "app_ami" {
+  name               = "app-ami"
+  source_instance_id = aws_instance.source_instance.id
+  tags = {
+    Name = "AppAMI"
+  }
+}
+
+resource "aws_spot_instance_request" "app" {
+  ami           = aws_ami_from_instance.app_ami.id
+  instance_type = "t3.micro"
+  spot_price    = "0.005"
+
+  tags = {
+    Name = "tc-cliente"
+  }
+
+  security_groups = length(data.aws_security_group.existing_sg.ids) > 0 ? [data.aws_security_group.existing_sg.id] : [aws_security_group.app_sg.id]
+}
