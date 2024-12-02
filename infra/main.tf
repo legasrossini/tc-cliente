@@ -4,12 +4,9 @@ provider "aws" {
   secret_key = var.aws_secret_key
 }
 
-# Tente buscar o Security Group existente
+# Tente buscar o Security Group existente pelo ID
 data "aws_security_group" "existing_sg" {
-  filter {
-    name   = "group-name"
-    values = ["app_sg"]
-  }
+  id = "sg-0382b6481e8c20d6d"
 }
 
 resource "aws_security_group" "app_sg" {
