@@ -56,7 +56,7 @@ jobs:
           path: ./infra/tfplan
 
       - name: Apply Terraform Plan
-        run: terraform apply -var="aws_access_key=${{ secrets.AWS_ACCESS_KEY_ID }}" -var="aws_secret_key=${{ secrets.AWS_SECRET_ACCESS_KEY }}" -auto-approve tfplan
+        run: terraform apply -var="aws_access_key=${{ secrets.AWS_ACCESS_KEY_ID }}" -var="aws_secret_key=${{ secrets.AWS_SECRET_ACCESS_KEY }}" -auto-approve ./infra/tfplan/tfplan
         working-directory: ./infra
 
       - name: Retrieve EC2 Public IP
