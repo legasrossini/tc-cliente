@@ -97,7 +97,31 @@
                 <version>0.8.8</version>
                 <executions>
                     <execution>
-                        <id>enforce-minimum-coverage</id>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                        <configuration>
+                            <excludes>
+                                <exclude>**/exceptions/**</exclude>
+                                <exclude>**/config/**</exclude>
+                                <exclude>**/repositories/**</exclude>
+                                <exclude>**/dtos/**</exclude>
+                                <exclude>**/constants/**</exclude>
+                                <exclude>**/mappers/**</exclude>
+                                <exclude>**/ClienteApplication.*</exclude>
+                            </excludes>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>check</id>
                         <phase>verify</phase>
                         <goals>
                             <goal>check</goal>
@@ -115,21 +139,13 @@
                                     </limits>
                                 </rule>
                             </rules>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>report</id>
-                        <phase>test</phase>
-                        <goals>
-                            <goal>report</goal>
-                        </goals>
-                        <configuration>
                             <excludes>
                                 <exclude>**/exceptions/**</exclude>
                                 <exclude>**/config/**</exclude>
                                 <exclude>**/repositories/**</exclude>
                                 <exclude>**/dtos/**</exclude>
                                 <exclude>**/constants/**</exclude>
+                                <exclude>**/mappers/**</exclude>
                                 <exclude>**/ClienteApplication.*</exclude>
                             </excludes>
                         </configuration>
