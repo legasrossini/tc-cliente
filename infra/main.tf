@@ -1,3 +1,7 @@
+resource "random_id" "suffix" {
+  byte_length = 4
+}
+
 provider "aws" {
   region     = var.region
   access_key = var.aws_access_key
@@ -6,7 +10,7 @@ provider "aws" {
 
 # Security Group
 resource "aws_security_group" "app_sg" {
-  name        = "app-security-group"
+  name        = "app-security-group-${random_id.suffix.hex}"
   description = "Allow SSH and HTTP traffic"
 
   ingress {
