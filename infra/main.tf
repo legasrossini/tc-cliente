@@ -1,3 +1,14 @@
+provider "aws" {
+  region     = var.region
+  access_key = var.aws_access_key
+  secret_key = var.aws_secret_key
+}
+
+# Tente buscar o Security Group existente pelo ID
+data "aws_security_group" "existing_sg" {
+  id = "sg-0382b6481e8c20d6d"
+}
+
 # Defina local para calcular o id do grupo de segurança
 locals {
   security_group_id = length(data.aws_security_group.existing_sg.id) > 0 ? data.aws_security_group.existing_sg.id : null
