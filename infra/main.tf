@@ -1,7 +1,3 @@
-resource "random_id" "suffix" {
-  byte_length = 4
-}
-
 provider "aws" {
   region     = var.region
   access_key = var.aws_access_key
@@ -10,7 +6,7 @@ provider "aws" {
 
 # Security Group
 resource "aws_security_group" "app_sg" {
-  name        = "app-security-group-${random_id.suffix.hex}"
+  name        = "app-security-group"
   description = "Allow SSH and HTTP traffic"
 
   ingress {
@@ -32,6 +28,10 @@ resource "aws_security_group" "app_sg" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  lifecycle {
+    create_before_destroy = true
   }
 }
 
