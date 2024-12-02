@@ -44,7 +44,20 @@ resource "aws_instance" "source_instance" {
   }
 }
 
+# Buscar a AMI existente pelo nome
+data "aws_ami" "existing_ami" {
+  filter {
+    name   = "name"
+    values = ["app-ami"]
+  }
+
+  most_recent = true
+  owners      = ["self"]
+}
+
+# Criar a AMI apenas se ela não existir
 resource "aws_ami_from_instance" "app_ami" {
+  count              = length(data.aws_ami.existing_ami.id) == 0 ? 1 : 0
   name               = "app-ami"
   source_instance_id = aws_instance.source_instance.id
   tags = {
@@ -53,7 +66,7 @@ resource "aws_ami_from_instance" "app_ami" {
 }
 
 resource "aws_spot_instance_request" "app" {
-  ami           = aws_ami_from_instance.app_ami.id
+  ami           = length(data.aws_ami.existing_ami.id) > 0 ? data.aws_ami.existing_ami.id : aws_ami_from_instance.app_ami[0].id
   instance_type = "t3.micro"
   spot_price    = "0.005"
 
