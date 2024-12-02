@@ -19,3 +19,9 @@ variable "base_ami_id" {
   type        = string
   default     = "ami-0453ec754f44f9a4a"
 }
+
+variable "fixed_instance_ip" {
+  description = "Fixed IP address for the EC2 instance"
+  type        = string
+  default     = "54.234.20.28"
+}
