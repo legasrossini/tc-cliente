@@ -31,25 +31,15 @@ resource "aws_security_group" "app_sg" {
   }
 }
 
-# EC2 Instance
-resource "aws_instance" "app" {
+# Spot Instance Request
+resource "aws_spot_instance_request" "app" {
   ami           = var.base_ami_id
   instance_type = "t2.micro"
+  spot_price    = "0.005"
 
   security_groups = [aws_security_group.app_sg.name]
 
   tags = {
     Name = "app-instance"
   }
-}
-
-# Outputs
-output "instance_id" {
-  description = "ID da instância EC2 criada"
-  value       = aws_instance.app.id
-}
-
-output "instance_public_ip" {
-  description = "Endereço IP público da instância EC2"
-  value       = aws_instance.app.public_ip
 }
