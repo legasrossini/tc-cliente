@@ -31,15 +31,14 @@ resource "aws_security_group" "app_sg" {
   }
 }
 
-# Spot Instance Request
-resource "aws_spot_instance_request" "app" {
+# EC2 Instance
+resource "aws_instance" "app" {
   ami           = var.base_ami_id
   instance_type = "t2.micro"
-  spot_price    = "0.005"
-
-  security_groups = [aws_security_group.app_sg.name]
 
   tags = {
     Name = "app-instance"
   }
+
+  security_groups = [aws_security_group.app_sg.name]
 }
