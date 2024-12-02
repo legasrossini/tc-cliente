@@ -1,5 +1,11 @@
+# Defina local para calcular o id do grupo de segurança
+locals {
+  security_group_id = length(data.aws_security_group.existing_sg.id) > 0 ? data.aws_security_group.existing_sg.id : null
+}
+
+# Se o grupo de segurança não for encontrado, crie um novo
 resource "aws_security_group" "app_sg" {
-  count       = length(data.aws_security_group.existing_sg.id) == 0 ? 1 : 0
+  count       = local.security_group_id == null ? 1 : 0
   name        = "app_sg"
   description = "Allow HTTP and SSH"
 
@@ -34,5 +40,6 @@ resource "aws_spot_instance_request" "app" {
     Name = "tc-cliente"
   }
 
-  security_groups = length(data.aws_security_group.existing_sg.id) > 0 ? [data.aws_security_group.existing_sg.id] : [aws_security_group.app_sg[0].id]
+  # Use o local para determinar o grupo de segurança
+  security_groups = local.security_group_id != null ? [local.security_group_id] : [aws_security_group.app_sg[0].id]
 }
