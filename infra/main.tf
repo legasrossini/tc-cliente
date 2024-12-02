@@ -4,8 +4,24 @@ provider "aws" {
   secret_key = var.aws_secret_key
 }
 
+resource "aws_instance" "source_instance" {
+  ami           = "ami-12345678" # Substitua por uma AMI base válida
+  instance_type = "t3.micro"
+  tags = {
+    Name = "SourceInstance"
+  }
+}
+
+resource "aws_ami_from_instance" "app_ami" {
+  name               = "app-ami"
+  source_instance_id = aws_instance.source_instance.id
+  tags = {
+    Name = "AppAMI"
+  }
+}
+
 resource "aws_spot_instance_request" "app" {
-  ami           = "ami-0c55b159cbfafe1f0" # Amazon Linux 2 AMI (HVM)
+  ami           = aws_ami_from_instance.app_ami.id
   instance_type = "t3.micro"
   spot_price    = "0.005"
 
