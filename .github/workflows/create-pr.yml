@@ -94,3 +94,4 @@ jobs:
                 draft: false
               });
               console.log(`Created pull request: ${pullRequest.html_url}`);
+            }
