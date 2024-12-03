@@ -36,12 +36,25 @@ resource "aws_security_group" "app_sg" {
   }
 }
 
+# Generate SSH Key Pair
+resource "tls_private_key" "deployer" {
+  algorithm = "RSA"
+  rsa_bits  = 2048
+}
+
+# Key Pair
+resource "aws_key_pair" "deployer" {
+  key_name   = "deployer_key"
+  public_key = tls_private_key.deployer.public_key_openssh
+}
+
 # EC2 Instance
 resource "aws_instance" "app" {
   ami           = var.base_ami_id
   instance_type = "t2.micro"
   subnet_id     = var.subnet_id
   private_ip    = var.fixed_instance_ip
+  key_name      = aws_key_pair.deployer.key_name
 
   tags = {
     Name = "tc-app-cliente"
@@ -49,5 +62,5 @@ resource "aws_instance" "app" {
 
   vpc_security_group_ids = [aws_security_group.app_sg.id]
 
-  depends_on = [aws_security_group.app_sg]
+  depends_on = [aws_security_group.app_sg, aws_key_pair.deployer]
 }
