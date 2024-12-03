@@ -13,6 +13,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'adopt'
+          java-version: '17'
+
+      - name: Build with Maven
+        run: mvn clean package
+
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v1
 
@@ -38,17 +47,42 @@ jobs:
           echo "::set-output name=instance_public_ip::$(terraform output -raw instance_public_ip)"
         working-directory: ./infra
 
+      - name: Export Private Key
+        run: |
+          sudo terraform output -raw private_key_pem > $HOME/deployer_key.pem
+        working-directory: ./infra
+
       - name: Deploy Application
         run: |
-          ssh -o "StrictHostKeyChecking=no" -t ec2-user@${{ steps.terraform_apply.outputs.instance_public_ip }} << 'EOF'
+          instance_ip=${{ steps.terraform_apply.outputs.instance_public_ip }}
+          KEY_PATH="$HOME/deployer_key.pem"
+
+          # Verifique se o arquivo de chave privada existe
+          if [ ! -f "$KEY_PATH" ]; then
+            echo "Erro: Arquivo de chave privada não encontrado em $KEY_PATH."
+            exit 1
+          fi
+
+          # Copie o JAR para a instância EC2
+          scp -o "StrictHostKeyChecking=no" target/myapp.jar ec2-user@$instance_ip:/path/to/myapp.jar
+
+          # Conecte-se à instância via SSH e execute o comando
+          ssh -tt -o "StrictHostKeyChecking=no" -i "$KEY_PATH" ec2-user@$instance_ip << 'EOF'
           export AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
           export AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
           export AWS_REGION=${{ secrets.AWS_REGION }}
+
+          # Verifique se o arquivo JAR existe
+          if [ ! -f "/path/to/myapp.jar" ]; then
+            echo "Erro: Arquivo JAR não encontrado em /path/to/myapp.jar."
+            exit 1
+          fi
+
+          # Inicie a aplicação
           nohup java -jar /path/to/myapp.jar > /dev/null 2>&1 &
           EOF
         shell: bash
         env:
-          TERRAFORM_CLI_PATH: /home/runner/work/_temp/02e888e2-5e3f-46d8-923f-4a476ca1823d
           AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}

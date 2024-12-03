@@ -8,3 +8,18 @@ output "instance_public_ip" {
   value       = aws_instance.app.public_ip
 }
 
+output "key_pair_name" {
+  description = "Nome do par de chaves"
+  value       = aws_key_pair.deployer.key_name
+}
+
+output "key_pair_public_key" {
+  description = "Chave priviada PEN"
+  value       = aws_key_pair.deployer.public_key
+}
+
+output "private_key_pem" {
+  description = "Chave privada PEM"
+  value       = tls_private_key.deployer.private_key_pem
+  sensitive   = true
+}
