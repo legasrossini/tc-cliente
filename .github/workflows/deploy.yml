@@ -63,14 +63,15 @@ jobs:
 
       - name: Export Private Key
         run: |
-          sudo terraform output -raw private_key_pem > $HOME/deployer_key.pem
+          terraform output -raw private_key_pem > $HOME/deployer_key.pem
+          chmod 600 $HOME/deployer_key.pem
         working-directory: ./infra
 
       - name: Deploy Application
         run: |
           INSTANCE_IP="${{ env.INSTANCE_IP }}"
           if [ -z "$INSTANCE_IP" ]; then
-            echo "Erro: IP da instância não encontrado."
+            echo "Erro: IP da instância não encontrado"
             exit 1
           fi
           echo "IP da instância: $INSTANCE_IP"
@@ -87,7 +88,7 @@ jobs:
 
           # Copie o JAR para a instância EC2
           echo "Copiando JAR para a instância..."
-          scp -o "StrictHostKeyChecking=no" "$JAR_PATH" ec2-user@$INSTANCE_IP:/path/to/cliente-1.0-SNAPSHOT.jar
+          scp -o "StrictHostKeyChecking=no" -i "$KEY_PATH" "$JAR_PATH" ec2-user@$INSTANCE_IP:/path/to/cliente-1.0-SNAPSHOT.jar
 
           # Conecte-se à instância via SSH e execute o comando
           ssh -tt -o "StrictHostKeyChecking=no" -i "$KEY_PATH" ec2-user@$INSTANCE_IP << 'EOF'
