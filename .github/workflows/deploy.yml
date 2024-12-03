@@ -48,7 +48,11 @@ jobs:
         run: |
           terraform apply -var="aws_access_key=${{ secrets.AWS_ACCESS_KEY_ID }}" -var="aws_secret_key=${{ secrets.AWS_SECRET_ACCESS_KEY }}" -auto-approve
           instance_ip=$(terraform output -raw instance_public_ip | tr -d '[:space:]')
-          echo "instance_ip=$instance_ip"
+          if [ -z "$instance_ip" ]; then
+            echo "Erro: Não foi possível obter o IP da instância."
+            exit 1
+          fi
+          echo "instance_ip=$instance_ip" >> $GITHUB_OUTPUT
         working-directory: ./infra
 
       - name: Export Private Key
@@ -58,8 +62,12 @@ jobs:
 
       - name: Deploy Application
         run: |
-          instance_ip=$(terraform output -raw instance_public_ip | tr -d '[:space:]')
-          echo "instance_ip=$instance_ip"
+          instance_ip=${{ steps.terraform_apply.outputs.instance_ip }}
+          if [ -z "$instance_ip" ]; then
+            echo "Erro: Não foi possível obter o IP da instância."
+            exit 1
+          fi
+          
           KEY_PATH="$HOME/deployer_key.pem"
           JAR_PATH="${{ env.JAR_PATH }}"
 
