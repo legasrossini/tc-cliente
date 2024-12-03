@@ -7,6 +7,7 @@ data "aws_instance" "app" {
     name   = "instance-state-name"
     values = ["running"]
   }
+  depends_on = [aws_instance.app]
 }
 
 resource "aws_api_gateway_rest_api" "my_api" {
@@ -31,9 +32,10 @@ resource "aws_api_gateway_method" "get_method" {
 resource "aws_api_gateway_integration" "get_integration" {
   rest_api_id = aws_api_gateway_rest_api.my_api.id
   resource_id = aws_api_gateway_resource.my_resource.id
-  http_method = "GET"
+  http_method = aws_api_gateway_method.get_method.http_method
   type        = "HTTP"
   uri         = "http://${data.aws_instance.app.public_ip}:8080/cliente"
+  depends_on  = [aws_instance.app]
 }
 
 # Método POST
@@ -47,9 +49,10 @@ resource "aws_api_gateway_method" "post_method" {
 resource "aws_api_gateway_integration" "post_integration" {
   rest_api_id = aws_api_gateway_rest_api.my_api.id
   resource_id = aws_api_gateway_resource.my_resource.id
-  http_method = "POST"
+  http_method = aws_api_gateway_method.post_method.http_method
   type        = "HTTP"
   uri         = "http://${data.aws_instance.app.public_ip}:8080/cliente"
+  depends_on  = [aws_instance.app]
 }
 
 resource "aws_api_gateway_deployment" "my_deployment" {
