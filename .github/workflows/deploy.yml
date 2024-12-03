@@ -78,7 +78,7 @@ jobs:
           export AWS_REGION=${{ secrets.AWS_REGION }}
 
           # Verifique se o arquivo JAR existe
-          if [ ! -f "/path/to/cliente-1.0-SNAPSHOT.jar" ]; então
+          if [ ! -f "/path/to/cliente-1.0-SNAPSHOT.jar" ]; then
             echo "Erro: Arquivo JAR não encontrado em /path/to/cliente-1.0-SNAPSHOT.jar."
             exit 1
           fi
