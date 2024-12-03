@@ -47,7 +47,7 @@ resource "aws_instance" "app" {
     Name = "app-instance"
   }
 
-  security_group_ids = [aws_security_group.app_sg.id]
+  vpc_security_group_ids = [aws_security_group.app_sg.id]
 
   depends_on = [aws_security_group.app_sg]
 }
