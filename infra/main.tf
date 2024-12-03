@@ -39,6 +39,7 @@ resource "aws_security_group" "app_sg" {
 resource "aws_instance" "app" {
   ami           = var.base_ami_id
   instance_type = "t2.micro"
+  subnet_id     = var.subnet_id
   private_ip    = var.fixed_instance_ip
 
   tags = {
