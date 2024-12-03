@@ -104,16 +104,17 @@ jobs:
             exit 1
           fi
           echo "Arquivo de chave privada: $KEY_PATH"
-
-          # Copie o JAR para a instância EC2
-          echo "Copiando JAR para a instância..."
-          scp -o "StrictHostKeyChecking=no" -i "$KEY_PATH" "$JAR_PATH" ec2-user@$INSTANCE_IP:/path/to/cliente-1.0-SNAPSHOT.jar
-
+          
           # Conecte-se à instância via SSH e execute o comando
           ssh -tt -o "StrictHostKeyChecking=no" -i "$KEY_PATH" ec2-user@$INSTANCE_IP << 'EOF'
           export AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
           export AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
           export AWS_REGION=${{ secrets.AWS_REGION }}
+          echo "Sucesso! Conexão bem sucedida e variáveis de ambiente AWS configuradas."
+
+          # Copie o JAR para a instância EC2
+          echo "Copiando JAR para a instância..."
+          scp -o "StrictHostKeyChecking=no" -i "$KEY_PATH" "$JAR_PATH" ec2-user@$INSTANCE_IP:/path/to/cliente-1.0-SNAPSHOT.jar
 
           # Verifique se o arquivo JAR existe
           if [ ! -f "/path/to/cliente-1.0-SNAPSHOT.jar" ]; then
