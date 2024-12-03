@@ -52,7 +52,7 @@ jobs:
         id: terraform_apply
         run: |
           terraform apply -var="aws_access_key=${{ secrets.AWS_ACCESS_KEY_ID }}" -var="aws_secret_key=${{ secrets.AWS_SECRET_ACCESS_KEY }}" -auto-approve
-          INSTANCE_IP=$(terraform output -raw instance_public_ip | awk 'NR==1 {print $1}' | tr -d '[:space:]')
+          INSTANCE_IP=$(terraform output -raw instance_public_ip 2>/dev/null | tr -d '[:space:]')
           if [ -z "$INSTANCE_IP" ]; then
             echo "Erro: Não foi possível obter o IP da instância."
             exit 1
