@@ -34,7 +34,7 @@ resource "aws_api_gateway_integration" "get_integration" {
   resource_id = aws_api_gateway_resource.my_resource.id
   http_method = "GET"  # Define o método explicitamente
   type        = "HTTP"
-  uri         = "http://${data.aws_instance.app.public_ip}:8080/cliente"
+  uri         = "http://54.162.17.76:8080/cliente"
   depends_on  = [
     aws_api_gateway_method.get_method, # Adiciona dependência explícita
     aws_instance.app
@@ -54,7 +54,7 @@ resource "aws_api_gateway_integration" "post_integration" {
   resource_id = aws_api_gateway_resource.my_resource.id
   http_method = "POST"  # Define o método explicitamente
   type        = "HTTP"
-  uri         = "http://${data.aws_instance.app.public_ip}:8080/cliente"
+  uri         = "http://54.162.17.76:8080/cliente"
   depends_on  = [
     aws_api_gateway_method.post_method, # Adiciona dependência explícita
     aws_instance.app
