@@ -44,7 +44,7 @@ resource "aws_instance" "app" {
   private_ip    = var.fixed_instance_ip
 
   tags = {
-    Name = "app-instance"
+    Name = "tc-app-cliente"
   }
 
   vpc_security_group_ids = [aws_security_group.app_sg.id]
