@@ -47,11 +47,17 @@ jobs:
         id: terraform_apply
         run: |
           terraform apply -var="aws_access_key=${{ secrets.AWS_ACCESS_KEY_ID }}" -var="aws_secret_key=${{ secrets.AWS_SECRET_ACCESS_KEY }}" -auto-approve
-          instance_ip=$(terraform output -raw instance_public_ip | tr -d '[:space:]')
           
-          # Verificar se o valor capturado é um IP válido
+          # Captura o valor diretamente em um arquivo
+          terraform output -raw instance_public_ip > instance_ip.txt
+          
+          # Leia e sanitize o valor
+          instance_ip=$(cat instance_ip.txt | tr -d '[:space:]')
+          
+          # Validar se é um IP válido
           if [[ "$instance_ip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "instance_public_ip=$instance_ip" >> $GITHUB_ENV
+            echo "Valid instance_public_ip: $instance_ip"
           else
             echo "Error: Invalid instance_public_ip: $instance_ip" >&2
             exit 1
