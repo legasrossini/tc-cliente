@@ -29,7 +29,7 @@ variable "subnet_id" {
 variable "fixed_instance_ip" {
   description = "Endereço IP fixo para a instância EC2"
   type        = string
-  default     = "172.31.32.0"
+  default     = "172.31.32.4"
 }
 
 variable "vpc_id" {
