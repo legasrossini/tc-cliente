@@ -71,7 +71,7 @@ jobs:
         run: |
           INSTANCE_IP="${{ env.INSTANCE_IP }}"
           if [ -z "$INSTANCE_IP" ]; then
-            echo "Erro: IP da instância não encontrado."
+            echo "Erro: IP da instância não encontrado"
             exit 1
           fi
           echo "IP da instância: $INSTANCE_IP"
