@@ -52,12 +52,13 @@ jobs:
         id: terraform_apply
         run: |
           terraform apply -var="aws_access_key=${{ secrets.AWS_ACCESS_KEY_ID }}" -var="aws_secret_key=${{ secrets.AWS_SECRET_ACCESS_KEY }}" -auto-approve
-          instance_ip=$(terraform output -raw instance_public_ip | tr -d '[:space:]')
-          if [ -z "$instance_ip" ]; then
+          INSTANCE_IP=$(terraform output -raw instance_public_ip | tr -d '[:space:][:cntrl:]')
+          if [ -z "$INSTANCE_IP" ]; then
             echo "Erro: Não foi possível obter o IP da instância."
             exit 1
           fi
-          echo "instance_ip_public=$instance_ip" >> $GITHUB_ENV
+          echo "INSTANCE_IP=$INSTANCE_IP" >> $GITHUB_ENV
+          echo "::set-output name=instance_ip::$INSTANCE_IP"
         working-directory: ./infra
 
       - name: Export Private Key
@@ -67,18 +68,16 @@ jobs:
 
       - name: Deploy Application
         run: |
-
-          INSTANCE_IP="${{ env.instance_ip_public }}"
-          KEY_PATH="$HOME/deployer_key.pem"
-          JAR_PATH="${{ env.JAR_PATH }}"
-          
-          # Verifique se o IP da instância foi obtido
+          INSTANCE_IP="${{ env.INSTANCE_IP }}"
           if [ -z "$INSTANCE_IP" ]; then
             echo "Erro: IP da instância não encontrado."
             exit 1
           fi
           echo "IP da instância: $INSTANCE_IP"
 
+          KEY_PATH="$HOME/deployer_key.pem"
+          JAR_PATH="${{ env.JAR_PATH }}"
+          
           # Verifique se o arquivo de chave privada existe
           if [ ! -f "$KEY_PATH" ]; then
             echo "Erro: Arquivo de chave privada não encontrado em $KEY_PATH."
@@ -87,32 +86,22 @@ jobs:
           echo "Arquivo de chave privada: $KEY_PATH"
 
           # Copie o JAR para a instância EC2
-          scp -o "StrictHostKeyChecking=no" "$JAR_PATH" ec2-user@$instance_ip:/path/to/cliente-1.0-SNAPSHOT.jar
-          echo "JAR copiado para a instância."
+          echo "Copiando JAR para a instância..."
+          scp -o "StrictHostKeyChecking=no" "$JAR_PATH" ec2-user@$INSTANCE_IP:/path/to/cliente-1.0-SNAPSHOT.jar
 
           # Conecte-se à instância via SSH e execute o comando
-          echo "Iniciando a aplicação na instância..."
-          ssh -tt -o "StrictHostKeyChecking=no" -i "$KEY_PATH" ec2-user@$instance_ip << 'EOF'
+          ssh -tt -o "StrictHostKeyChecking=no" -i "$KEY_PATH" ec2-user@$INSTANCE_IP << 'EOF'
           export AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
           export AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
           export AWS_REGION=${{ secrets.AWS_REGION }}
-          echo "Variáveis de ambiente configuradas."
 
           # Verifique se o arquivo JAR existe
           if [ ! -f "/path/to/cliente-1.0-SNAPSHOT.jar" ]; then
             echo "Erro: Arquivo JAR não encontrado em /path/to/cliente-1.0-SNAPSHOT.jar."
             exit 1
           fi
-          echo "Arquivo JAR encontrado."
 
           # Inicie a aplicação
-          echo "Iniciando a aplicação..."
           nohup java -jar /path/to/cliente-1.0-SNAPSHOT.jar > /dev/null 2>&1 &
           EOF
           echo "Aplicação iniciada na instância."
-        shell: bash
-        env:
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
