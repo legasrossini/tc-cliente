@@ -48,14 +48,7 @@ jobs:
         run: |
           terraform apply -var="aws_access_key=${{ secrets.AWS_ACCESS_KEY_ID }}" -var="aws_secret_key=${{ secrets.AWS_SECRET_ACCESS_KEY }}" -auto-approve
           instance_ip=$(terraform output -raw instance_public_ip | tr -d '[:space:]')
-          
-          # Verificar se o valor capturado é um IP válido
-          if [[ "$instance_ip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "instance_public_ip=$instance_ip" >> $GITHUB_ENV
-          else
-            echo "Error: Invalid instance_public_ip: $instance_ip" >&2
-            exit 1
-          fi
+          echo "instance_ip=$instance_ip"
         working-directory: ./infra
 
       - name: Export Private Key
@@ -65,7 +58,8 @@ jobs:
 
       - name: Deploy Application
         run: |
-          instance_ip=${{ env.instance_public_ip }}
+          instance_ip=$(terraform output -raw instance_public_ip | tr -d '[:space:]')
+          echo "instance_ip=$instance_ip"
           KEY_PATH="$HOME/deployer_key.pem"
           JAR_PATH="${{ env.JAR_PATH }}"
 
