@@ -1,6 +1,13 @@
+data "aws_instance" "app" {
+  filter {
+    name   = "tag:Name"
+    values = ["tc-app-cliente"]
+  }
+}
+
 resource "aws_api_gateway_rest_api" "my_api" {
-  name        = "gatewayCliente"
-  description = "API Gateway for my application"
+  name        = "gtw-cliente"
+  description = "API Gateway da aplicação de cliente"
 }
 
 resource "aws_api_gateway_resource" "my_resource" {
@@ -22,7 +29,7 @@ resource "aws_api_gateway_integration" "get_integration" {
   resource_id = aws_api_gateway_resource.my_resource.id
   http_method = aws_api_gateway_method.get_method.http_method
   type        = "HTTP"
-  uri         = "http://${aws_instance.app.public_ip}:8080/cliente"
+  uri         = "http://${data.aws_instance.app.public_ip}:8080/cliente"
 }
 
 # Método POST
@@ -38,7 +45,7 @@ resource "aws_api_gateway_integration" "post_integration" {
   resource_id = aws_api_gateway_resource.my_resource.id
   http_method = aws_api_gateway_method.post_method.http_method
   type        = "HTTP"
-  uri         = "http://${aws_instance.app.public_ip}:8080/cliente"
+  uri         = "http://${data.aws_instance.app.public_ip}:8080/cliente"
 }
 
 resource "aws_api_gateway_deployment" "my_deployment" {
@@ -47,9 +54,14 @@ resource "aws_api_gateway_deployment" "my_deployment" {
     aws_api_gateway_integration.post_integration
   ]
   rest_api_id = aws_api_gateway_rest_api.my_api.id
-  stage_name  = "prod"
+}
+
+resource "aws_api_gateway_stage" "prod" {
+  deployment_id = aws_api_gateway_deployment.my_deployment.id
+  rest_api_id   = aws_api_gateway_rest_api.my_api.id
+  stage_name    = "prod"
 }
 
 output "api_url" {
-  value = "${aws_api_gateway_deployment.my_deployment.invoke_url}/cliente"
+  value = "${aws_api_gateway_stage.prod.invoke_url}/cliente"
 }
