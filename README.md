@@ -1,6 +1,6 @@
 # tc-ec2-cliente
 
-Projeto de exemplo para gerenciar uma aplicação cliente com deploy em instâncias EC2 utilizando Terraform e GitHub Actions.
+É um projeto de exemplo para gerenciar uma aplicação cliente com deploy em instâncias EC2 utilizando Terraform e GitHub Actions.
 
 ![AWS EC2](https://img.shields.io/badge/AWS-EC2-232F3E?style=for-the-badge&logo=amazon-aws&logoColor=white)
 ![Java](https://img.shields.io/badge/Java-ED8B00?style=for-the-badge&logo=java&logoColor=white)
