@@ -3,6 +3,10 @@ data "aws_instance" "app" {
     name   = "tag:Name"
     values = ["tc-app-cliente"]
   }
+  filter {
+    name   = "instance-state-name"
+    values = ["running"]
+  }
 }
 
 resource "aws_api_gateway_rest_api" "my_api" {
