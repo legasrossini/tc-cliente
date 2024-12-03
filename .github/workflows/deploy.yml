@@ -23,7 +23,12 @@ jobs:
         id: build
         run: |
           mvn clean package
-          echo "JAR_PATH=$(find target -name '*.jar')" >> $GITHUB_ENV
+          JAR_PATH=$(find target -name '*.jar')
+          if [ -z "$JAR_PATH" ]; then
+            echo "Erro: Nenhum arquivo JAR encontrado após a build."
+            exit 1
+          fi
+          echo "JAR_PATH=$JAR_PATH" >> $GITHUB_ENV
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v1
@@ -52,7 +57,7 @@ jobs:
             echo "Erro: Não foi possível obter o IP da instância."
             exit 1
           fi
-          echo "instance_ip=$instance_ip" >> $GITHUB_OUTPUT
+          echo "::set-output name=instance_ip::$instance_ip"
         working-directory: ./infra
 
       - name: Export Private Key
@@ -67,7 +72,7 @@ jobs:
             echo "Erro: Não foi possível obter o IP da instância."
             exit 1
           fi
-          
+
           KEY_PATH="$HOME/deployer_key.pem"
           JAR_PATH="${{ env.JAR_PATH }}"
 
@@ -78,7 +83,7 @@ jobs:
           fi
 
           # Copie o JAR para a instância EC2
-          scp -o "StrictHostKeyChecking=no" $JAR_PATH ec2-user@$instance_ip:/path/to/cliente-1.0-SNAPSHOT.jar
+          scp -o "StrictHostKeyChecking=no" "$JAR_PATH" ec2-user@$instance_ip:/path/to/cliente-1.0-SNAPSHOT.jar
 
           # Conecte-se à instância via SSH e execute o comando
           ssh -tt -o "StrictHostKeyChecking=no" -i "$KEY_PATH" ec2-user@$instance_ip << 'EOF'
