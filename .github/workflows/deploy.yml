@@ -6,7 +6,6 @@ on:
       - main
 
 jobs:
-
   terraform:
     runs-on: ubuntu-latest
 
@@ -44,7 +43,7 @@ jobs:
           export AWS_REGION=${{ secrets.AWS_REGION }}
           nohup java -jar /path/to/myapp.jar > /dev/null 2>&1 &
           EOF
-        shell: /usr/bin/bash -e {0}
+        shell: /usr/bin/bash -e
         env:
           TERRAFORM_CLI_PATH: /home/runner/work/_temp/02e888e2-5e3f-46d8-923f-4a476ca1823d
           AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
