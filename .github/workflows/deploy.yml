@@ -52,7 +52,6 @@ jobs:
         id: terraform_apply
         run: |
           terraform apply -var="aws_access_key=${{ secrets.AWS_ACCESS_KEY_ID }}" -var="aws_secret_key=${{ secrets.AWS_SECRET_ACCESS_KEY }}" -auto-approve
-          # INSTANCE_IP=$(terraform output -raw instance_public_ip | awk 'NR==1 {print $1}' | tr -d '[:space:]')
           
           # Captura do IP público
           RAW_INSTANCE_IP=$(terraform output -raw instance_public_ip || terraform output instance_public_ip)
@@ -71,6 +70,21 @@ jobs:
           terraform output -raw private_key_pem > $HOME/deployer_key.pem
           chmod 600 $HOME/deployer_key.pem
         working-directory: ./infra
+
+      - name: Wait for SSH to be available
+        run: |
+          INSTANCE_IP="${{ env.INSTANCE_IP }}"
+          echo "Aguardando a instância estar acessível via SSH..."
+          for i in {1..30}; do
+            nc -zv $INSTANCE_IP 22 && break
+            echo "Tentativa $i: Porta 22 ainda não está acessível. Aguardando 10 segundos..."
+            sleep 10
+          done
+          if ! nc -zv $INSTANCE_IP 22; then
+            echo "Erro: Porta 22 não está acessível após várias tentativas."
+            exit 1
+          fi
+          echo "Porta 22 está acessível. Continuando com o deploy."
 
       - name: Deploy Application
         run: |
