@@ -6,7 +6,7 @@ provider "aws" {
 
 # Security Group
 resource "aws_security_group" "app_sg" {
-  name        = "app-security-group"
+  name_prefix = "app-security-group-"
   description = "Allow SSH and HTTP traffic"
   vpc_id      = var.vpc_id
 
