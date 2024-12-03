@@ -110,12 +110,10 @@
                         </goals>
                         <configuration>
                             <excludes>
-                                <exclude>**/exceptions/**</exclude>
                                 <exclude>**/config/**</exclude>
                                 <exclude>**/repositories/**</exclude>
                                 <exclude>**/dtos/**</exclude>
                                 <exclude>**/constants/**</exclude>
-                                <exclude>**/mappers/**</exclude>
                                 <exclude>**/ClienteApplication.*</exclude>
                             </excludes>
                         </configuration>
@@ -140,12 +138,10 @@
                                 </rule>
                             </rules>
                             <excludes>
-                                <exclude>**/exceptions/**</exclude>
                                 <exclude>**/config/**</exclude>
                                 <exclude>**/repositories/**</exclude>
                                 <exclude>**/dtos/**</exclude>
                                 <exclude>**/constants/**</exclude>
-                                <exclude>**/mappers/**</exclude>
                                 <exclude>**/ClienteApplication.*</exclude>
                             </excludes>
                         </configuration>
