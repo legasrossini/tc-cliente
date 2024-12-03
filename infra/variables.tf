@@ -31,3 +31,9 @@ variable "fixed_instance_ip" {
   type        = string
   default     = "172.31.0.10"
 }
+
+variable "vpc_id" {
+  description = "ID da VPC onde a instância EC2 será criada"
+  type        = string
+  default     = "vpc-0c18146a44e90e4c7"
+}
