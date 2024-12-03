@@ -20,8 +20,12 @@ variable "base_ami_id" {
   default     = "ami-0453ec754f44f9a4a"
 }
 
-variable "fixed_instance_ip" {
-  description = "Fixed IP address for the EC2 instance"
+variable "subnet_id" {
+  description = "ID da sub-rede onde a instância EC2 será criada"
   type        = string
-  default     = "54.234.20.28"
+}
+
+variable "fixed_instance_ip" {
+  description = "Endereço IP fixo para a instância EC2"
+  type        = string
 }
