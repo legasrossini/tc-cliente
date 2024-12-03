@@ -23,9 +23,11 @@ variable "base_ami_id" {
 variable "subnet_id" {
   description = "ID da sub-rede onde a instância EC2 será criada"
   type        = string
+  default     = "subnet-0752c7227a214c988"
 }
 
 variable "fixed_instance_ip" {
   description = "Endereço IP fixo para a instância EC2"
   type        = string
+  default     = "172.31.0.10"
 }
