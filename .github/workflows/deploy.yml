@@ -29,6 +29,7 @@ jobs:
             exit 1
           fi
           echo "JAR_PATH=$JAR_PATH" >> $GITHUB_ENV
+          echo "Caminho do JAR: $JAR_PATH"
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v1
@@ -114,13 +115,26 @@ jobs:
           
           # Crie o diretório de destino, se não existir
           mkdir -p /home/ec2-user     
-         
-          # Verifique se o arquivo JAR existe
+          echo "Diretório de destino criado com sucesso."
+          
+          if [ ! -f "$JAR_PATH" ]; then
+            echo "Erro: Arquivo JAR não encontrado em $JAR_PATH."
+            exit 1
+          fi                      
+          
+          # Copie o JAR para o diretório de destino
+          echo "Tentando copiar arquivo JAR."
+          scp -o "StrictHostKeyChecking=no" -i "$KEY_PATH" "$JAR_PATH" ec2-user@$INSTANCE_IP:/home/ec2-user/cliente-1.0-SNAPSHOT.jar
+          echo "Arquivo JAR copiado com sucesso."
+          EOF
+          
+          ssh -tt -o "StrictHostKeyChecking=no" -i "$KEY_PATH" ec2-user@$INSTANCE_IP << 'EOF'
           if [ ! -f "/home/ec2-user/cliente-1.0-SNAPSHOT.jar" ]; then
             echo "Erro: Arquivo JAR não encontrado em /home/ec2-user/cliente-1.0-SNAPSHOT.jar."
             exit 1
           fi
-          
+          EOF
+
           # Inicie a aplicação
           nohup java -jar /home/ec2-user/cliente-1.0-SNAPSHOT.jar > /dev/null 2>&1 &
           EOF
