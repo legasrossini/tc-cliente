@@ -99,12 +99,20 @@ jobs:
           KEY_PATH="$HOME/deployer_key.pem"
           JAR_PATH="${{ env.JAR_PATH }}"
           
+          echo "Arquivo de chave privada: $KEY_PATH"
+          
           # Verifique se o arquivo de chave privada existe
           if [ ! -f "$KEY_PATH" ]; then
             echo "Erro: Arquivo de chave privada não encontrado em $KEY_PATH."
             exit 1
           fi
           echo "Arquivo de chave privada: $KEY_PATH"
+          
+          #if [ ! -f "$JAR_PATH" ]; then
+          #  echo "Erro: Arquivo JAR não encontrado em $JAR_PATH."
+          #  exit 1
+          #fi 
+          echo "Caminho do JAR <--------: $JAR_PATH"
           
           # Conecte-se à instância via SSH e execute o comando
           ssh -tt -o "StrictHostKeyChecking=no" -i "$KEY_PATH" ec2-user@$INSTANCE_IP << 'EOF'
@@ -115,16 +123,11 @@ jobs:
           
           # Crie o diretório de destino, se não existir
           mkdir -p /home/ec2-user     
-          echo "Diretório de destino criado com sucesso."
-          
-          if [ ! -f "$JAR_PATH" ]; then
-            echo "Erro: Arquivo JAR não encontrado em $JAR_PATH."
-            exit 1
-          fi                      
+          echo "Diretório de destino criado com sucesso." 
           
           # Copie o JAR para o diretório de destino
           echo "Tentando copiar arquivo JAR."
-          scp -o "StrictHostKeyChecking=no" -i "$KEY_PATH" "$JAR_PATH" ec2-user@$INSTANCE_IP:/home/ec2-user/cliente-1.0-SNAPSHOT.jar
+          scp -o "StrictHostKeyChecking=no" -i "$KEY_PATH" "target/cliente-1.0-SNAPSHOT.jar" ec2-user@$INSTANCE_IP:/home/ec2-user/cliente-1.0-SNAPSHOT.jar
           echo "Arquivo JAR copiado com sucesso."
           EOF
           
