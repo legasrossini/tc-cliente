@@ -9,7 +9,7 @@ Este é um projeto de exemplo para gerenciar uma aplicação cliente com deploy 
 
 ## Descrição
 
-Este projeto configura uma aplicação cliente que é implantada em instâncias EC2. Ele utiliza Terraform para gerenciar a infraestrutura como código e GitHub Actions para automatizar o fluxo de trabalho de desenvolvimento e implantação.
+O projeto configura uma aplicação cliente que é implantada em instâncias EC2. Ele utiliza Terraform para gerenciar a infraestrutura como código e GitHub Actions para automatizar o fluxo de trabalho de desenvolvimento e implantação.
 
 ## Estrutura do Projeto e Arquitetura Hexagonal
 
