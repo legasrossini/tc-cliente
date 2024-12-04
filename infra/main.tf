@@ -36,13 +36,31 @@ resource "aws_security_group" "app_sg" {
   }
 }
 
-# Generate SSH Key Pair
+# Bucket S3
+resource "aws_s3_bucket" "application_jar" {
+  bucket = "${var.s3_bucket_name}-${random_id.bucket_suffix.hex}"
+  acl    = "private"
+
+  versioning {
+    enabled = true
+  }
+
+  tags = {
+    Name        = "AppJARBucket"
+    Environment = "Production"
+  }
+}
+
+resource "random_id" "bucket_suffix" {
+  byte_length = 4
+}
+
+# SSH Key Pair
 resource "tls_private_key" "deployer" {
   algorithm = "RSA"
   rsa_bits  = 2048
 }
 
-# Key Pair
 resource "aws_key_pair" "deployer" {
   key_name   = "deployer_key"
   public_key = tls_private_key.deployer.public_key_openssh
@@ -63,4 +81,17 @@ resource "aws_instance" "app" {
   vpc_security_group_ids = [aws_security_group.app_sg.id]
 
   depends_on = [aws_security_group.app_sg, aws_key_pair.deployer]
+}
+
+output "s3_bucket_name" {
+  value = aws_s3_bucket.application_jar.bucket
+}
+
+output "instance_public_ip" {
+  value = aws_instance.app.public_ip
+}
+
+output "private_key_pem" {
+  value     = tls_private_key.deployer.private_key_pem
+  sensitive = true
 }

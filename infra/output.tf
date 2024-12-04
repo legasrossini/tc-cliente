@@ -23,3 +23,8 @@ output "private_key_pem" {
   value       = tls_private_key.deployer.private_key_pem
   sensitive   = true
 }
+
+output "s3_bucket_name" {
+  description = "Nome do bucket S3"
+  value       = aws_s3_bucket.application_jar.bucket
+}
