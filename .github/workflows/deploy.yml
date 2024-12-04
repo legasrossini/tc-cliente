@@ -6,30 +6,12 @@ on:
       - main
 
 jobs:
-  terraform:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-
-      - name: Set up JDK
-        uses: actions/setup-java@v2
-        with:
-          distribution: 'adopt'
-          java-version: '17'
-
-      - name: Build with Maven
-        id: build
-        run: |
-          mvn clean package
-          JAR_PATH=$(find target -name '*.jar')
-          if [ -z "$JAR_PATH" ]; then
-            echo "Erro: Nenhum arquivo JAR encontrado após a build."
-            exit 1
-          fi
-          echo "JAR_PATH=$JAR_PATH" >> $GITHUB_ENV
-          echo "Caminho do JAR: $JAR_PATH"
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v1
@@ -54,10 +36,8 @@ jobs:
         run: |
           terraform apply -var="aws_access_key=${{ secrets.AWS_ACCESS_KEY_ID }}" -var="aws_secret_key=${{ secrets.AWS_SECRET_ACCESS_KEY }}" -auto-approve
           
-          # Captura do IP público
-          RAW_INSTANCE_IP=$(terraform output -raw instance_public_ip || terraform output instance_public_ip)
-          INSTANCE_IP=$(echo "$RAW_INSTANCE_IP" | grep -Eo '([0-9]{1,3}\.){3}[0-9]{1,3}' | head -n 1)
-
+          # Captura o IP público
+          INSTANCE_IP=$(terraform output -raw instance_public_ip)
           if [ -z "$INSTANCE_IP" ]; then
             echo "Erro: Não foi possível obter o IP da instância."
             exit 1
@@ -87,46 +67,42 @@ jobs:
           fi
           echo "Porta 22 está acessível. Continuando com o deploy."
 
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'adopt'
+          java-version: '17'
+
+      - name: Build with Maven
+        id: build
+        run: |
+          mvn clean package
+          JAR_PATH=$(find target -name '*.jar')
+          if [ -z "$JAR_PATH" ]; then
+            echo "Erro: Nenhum arquivo JAR encontrado após a build."
+            exit 1
+          fi
+          echo "JAR_PATH=$JAR_PATH" >> $GITHUB_ENV
+          echo "Caminho do JAR: $JAR_PATH"
+
       - name: Deploy Application
         run: |
           INSTANCE_IP="${{ env.INSTANCE_IP }}"
-          if [ -z "$INSTANCE_IP" ]; then
-            echo "Erro: IP da instância não encontrado."
-            exit 1
-          fi
-          echo "IP da instância: $INSTANCE_IP"
-          
           KEY_PATH="$HOME/deployer_key.pem"
           JAR_PATH="${{ env.JAR_PATH }}"
-          
-          echo "Arquivo de chave privada: $KEY_PATH"
-          echo "Caminho do JAR: $JAR_PATH"
-          
-          # Verifique se o arquivo de chave privada existe
-          if [ ! -f "$KEY_PATH" ]; then
-            echo "Erro: Arquivo de chave privada não encontrado em $KEY_PATH."
-            exit 1
-          fi
 
-          # Copie o arquivo JAR da máquina local para a instância EC2
           echo "Iniciando transferência do JAR com SCP..."
           scp -o "StrictHostKeyChecking=no" -i "$KEY_PATH" "$JAR_PATH" ec2-user@$INSTANCE_IP:/home/ec2-user/cliente-1.0-SNAPSHOT.jar
           echo "Arquivo JAR transferido com sucesso."
 
-          # Configure a instância EC2 e inicie o aplicativo
           echo "Configurando e iniciando a aplicação na instância EC2..."
           ssh -tt -o "StrictHostKeyChecking=no" -i "$KEY_PATH" ec2-user@$INSTANCE_IP << 'EOF'
-          # Configuração e inicialização
-          export AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
-          export AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          export AWS_REGION=${{ secrets.AWS_REGION }}
-          echo "Sucesso! Conexão bem-sucedida e variáveis de ambiente AWS configuradas."
-
-          # Verifique se o arquivo JAR está na posição correta
           if [ ! -f "/home/ec2-user/cliente-1.0-SNAPSHOT.jar" ]; then
-            echo "Erro: Arquivo JAR não encontrado em /home/ec2-user/cliente-1.0-SNAPSHOT.jar."
+            echo "Erro: Arquivo JAR não encontrado."
             exit 1
           fi
 
-          # Inicie a aplicação
-          echo "
+          # Iniciar a aplicação
+          nohup java -jar /home/ec2-user/cliente-1.0-SNAPSHOT.jar > /home/ec2-user/app.log 2>&1 &
+          echo "Aplicação iniciada com sucesso. Logs estão disponíveis em /home/ec2-user/app.log"
+          EOF
