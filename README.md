@@ -105,3 +105,7 @@ O branch `main` é utilizado para a versão estável do código. Todas as mudan�
    ```sh
    git clone https://github.com/legasrossini/tc-ec2-cliente.git
    cd tc-ec2-cliente
+   
+## Execução dos Testes Unitários
+
+![img.png](img.png)
