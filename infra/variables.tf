@@ -37,3 +37,9 @@ variable "vpc_id" {
   type        = string
   default     = "vpc-0c18146a44e90e4c7"
 }
+
+variable "s3_bucket_name" {
+  description = "Nome base para o bucket S3"
+  type        = string
+  default     = "tc-ec2-client-bucket"
+}
