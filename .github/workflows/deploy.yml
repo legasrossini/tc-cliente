@@ -141,5 +141,7 @@ jobs:
           echo "Sucesso! Conexão bem sucedida e variáveis de ambiente AWS configuradas."       
 
           # Inicie a aplicação
+          echo "Iniciando a aplicação..."
           nohup java -jar /home/ec2-user/cliente-1.0-SNAPSHOT.jar > /dev/null 2>&1 &
           EOF
+          echo "Aplicação iniciada com sucesso."
