@@ -64,3 +64,17 @@ resource "aws_instance" "app" {
 
   depends_on = [aws_security_group.app_sg, aws_key_pair.deployer]
 }
+
+resource "aws_s3_bucket" "application_jar" {
+  bucket = var.s3_bucket_name
+  acl    = "private"
+
+  tags = {
+    Name        = "tc-app-client-bucket"
+    Environment = "Production"
+  }
+
+  lifecycle {
+    prevent_destroy = true  # Prevenir que o bucket seja destruído acidentalmente
+  }
+}
