@@ -114,7 +114,13 @@ jobs:
           
           # Crie o diretório de destino, se não existir
           mkdir -p /home/ec2-user     
-         
+          echo "Diretório de destino criado com sucesso."
+          
+          # Copie o JAR para o diretório de destino
+          scp -o "StrictHostKeyChecking=no" -i "$KEY_PATH" "$JAR_PATH" ec2-user@$INSTANCE_IP:/home/ec2-user/cliente-1.0-SNAPSHOT.jar
+          echo "Arquivo JAR copiado com sucesso."
+          EOF
+          
           # Verifique se o arquivo JAR existe
           if [ ! -f "/home/ec2-user/cliente-1.0-SNAPSHOT.jar" ]; then
             echo "Erro: Arquivo JAR não encontrado em /home/ec2-user/cliente-1.0-SNAPSHOT.jar."
