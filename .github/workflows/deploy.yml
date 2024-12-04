@@ -103,6 +103,14 @@ jobs:
           export AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
           export AWS_REGION=${{ secrets.AWS_REGION }}
 
-          aws s3 cp s3://tc-ec2-client-bucket/cliente-1.0-SNAPSHOT.jar - | nohup java -jar /dev/stdin > /dev/null 2>&1 &
+          TEMP_JAR_PATH="/tmp/cliente-1.0-SNAPSHOT.jar"
+          aws s3 cp s3://tc-ec2-client-bucket/cliente-1.0-SNAPSHOT.jar $TEMP_JAR_PATH
+
+          if [ ! -f "$TEMP_JAR_PATH" ]; then
+            echo "Erro: Arquivo JAR não encontrado em $TEMP_JAR_PATH."
+            exit 1
+          fi
+
+          nohup java -jar $TEMP_JAR_PATH > /dev/null 2>&1 &
           EOF
           echo "Aplicação iniciada com sucesso."
