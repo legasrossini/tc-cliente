@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  deploy:
+  terraform:
     runs-on: ubuntu-latest
 
     steps:
@@ -17,26 +17,35 @@ jobs:
         uses: hashicorp/setup-terraform@v1
 
       - name: Configure AWS credentials
-        run: |
-          export AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
-          export AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          export AWS_REGION=${{ secrets.AWS_REGION }}
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Terraform Init
         run: terraform init
         working-directory: ./infra
 
+      - name: Terraform Validate
+        run: terraform validate
+        working-directory: ./infra
+
       - name: Terraform Apply
         id: terraform_apply
         run: |
-          terraform apply -auto-approve
+          terraform apply -var="aws_access_key=${{ secrets.AWS_ACCESS_KEY_ID }}" -var="aws_secret_key=${{ secrets.AWS_SECRET_ACCESS_KEY }}" -auto-approve
+          
+          # Captura do IP público
+          RAW_INSTANCE_IP=$(terraform output -raw instance_public_ip || terraform output instance_public_ip)
+          INSTANCE_IP=$(echo "$RAW_INSTANCE_IP" | grep -Eo '([0-9]{1,3}\.){3}[0-9]{1,3}' | head -n 1)
 
-          # Obter o IP público e o nome do bucket
-          INSTANCE_IP=$(terraform output -raw instance_public_ip)
-          S3_BUCKET=$(terraform output -raw s3_bucket_name)
-
+          if [ -z "$INSTANCE_IP" ]; then
+            echo "Erro: Não foi possível obter o IP da instância."
+            exit 1
+          fi
           echo "INSTANCE_IP=$INSTANCE_IP" >> $GITHUB_ENV
-          echo "S3_BUCKET=$S3_BUCKET" >> $GITHUB_ENV
+          echo "::set-output name=instance_ip::$INSTANCE_IP"
         working-directory: ./infra
 
       - name: Export Private Key
@@ -58,6 +67,7 @@ jobs:
             echo "Erro: Porta 22 não está acessível após várias tentativas."
             exit 1
           fi
+          echo "Porta 22 está acessível. Continuando com o deploy."
 
       - name: Set up JDK
         uses: actions/setup-java@v2
@@ -75,34 +85,63 @@ jobs:
             exit 1
           fi
           echo "JAR_PATH=$JAR_PATH" >> $GITHUB_ENV
-          echo "Caminho do JAR: $JAR_PATH"
-
-      - name: Upload JAR to S3
-        run: |
-          JAR_PATH="${{ env.JAR_PATH }}"
-          S3_BUCKET="${{ env.S3_BUCKET }}"
-
-          echo "Fazendo upload do JAR para o bucket S3..."
-          aws s3 cp "$JAR_PATH" "s3://$S3_BUCKET/cliente-1.0-SNAPSHOT.jar"
-          echo "Upload concluído com sucesso."
+          echo "Caminho do JAR: $JAR_PATH"      
 
       - name: Deploy Application
         run: |
           INSTANCE_IP="${{ env.INSTANCE_IP }}"
-          S3_BUCKET="${{ env.S3_BUCKET }}"
-          KEY_PATH="$HOME/deployer_key.pem"
-
-          echo "Iniciando deploy da aplicação..."
-          ssh -tt -o "StrictHostKeyChecking=no" -i "$KEY_PATH" ec2-user@$INSTANCE_IP << EOF
-          echo "Baixando o arquivo JAR do S3..."
-          aws s3 cp "s3://$S3_BUCKET/cliente-1.0-SNAPSHOT.jar" /home/ec2-user/cliente-1.0-SNAPSHOT.jar
-
-          if [ ! -f "/home/ec2-user/cliente-1.0-SNAPSHOT.jar" ]; then
-            echo "Erro: Arquivo JAR não encontrado."
+          if [ -z "$INSTANCE_IP" ]; then
+            echo "Erro: IP da instância não encontrado."
             exit 1
           fi
-
-          # Iniciar a aplicação
-          nohup java -jar /home/ec2-user/cliente-1.0-SNAPSHOT.jar > /home/ec2-user/app.log 2>&1 &
-          echo "Aplicação iniciada com sucesso. Logs disponíveis em /home/ec2-user/app.log"
+          echo "IP da instância: $INSTANCE_IP"
+          
+          KEY_PATH="$HOME/deployer_key.pem"
+          JAR_PATH="${{ env.JAR_PATH }}"
+          
+          echo "Arquivo de chave privada: $KEY_PATH"
+          
+          # Verifique se o arquivo de chave privada existe
+          if [ ! -f "$KEY_PATH" ]; then
+            echo "Erro: Arquivo de chave privada não encontrado em $KEY_PATH."
+            exit 1
+          fi
+          echo "Arquivo de chave privada: $KEY_PATH"
+          
+          #if [ ! -f "$JAR_PATH" ]; then
+          #  echo "Erro: Arquivo JAR não encontrado em $JAR_PATH."
+          #  exit 1
+          #fi 
+          echo "Caminho do JAR <--------: $JAR_PATH"
+          
+          # Conecte-se à instância via SSH e execute os comandos necessários
+          ssh -tt -o "StrictHostKeyChecking=no" -i "$KEY_PATH" ec2-user@$INSTANCE_IP << 'EOF'
+          # Crie o diretório de destino na instância EC2, se não existir
+          mkdir -p /home/ec2-user
+          echo "Diretório de destino criado com sucesso."        
+       
+          #Copie o arquivo JAR da máquina local para a instância EC2
+          echo "Tentando copiar arquivo JAR."   
+          scp -o "StrictHostKeyChecking=no" -i "$KEY_PATH" "$cliente-1.0-SNAPSHOT.jar" ec2-user@$INSTANCE_IP:/home/ec2-user/cliente-1.0-SNAPSHOT.jar
+          echo "Arquivo JAR copiado com sucesso."
           EOF
+                    
+          ssh -tt -o "StrictHostKeyChecking=no" -i "$KEY_PATH" ec2-user@$INSTANCE_IP << 'EOF'
+          if [ ! -f "/home/ec2-user/cliente-1.0-SNAPSHOT.jar" ]; then
+            echo "Erro: Arquivo JAR não encontrado em /home/ec2-user/cliente-1.0-SNAPSHOT.jar."
+            exit 1
+          fi
+          EOF
+    
+          # Conecte-se à instância via SSH e execute o comando
+          ssh -tt -o "StrictHostKeyChecking=no" -i "$KEY_PATH" ec2-user@$INSTANCE_IP << 'EOF'
+          export AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+          export AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          export AWS_REGION=${{ secrets.AWS_REGION }}
+          echo "Sucesso! Conexão bem sucedida e variáveis de ambiente AWS configuradas."       
+
+          # Inicie a aplicação
+          echo "Iniciando a aplicação..."
+          nohup java -jar /home/ec2-user/cliente-1.0-SNAPSHOT.jar > /dev/null 2>&1 &
+          EOF
+          echo "Aplicação iniciada com sucesso."
