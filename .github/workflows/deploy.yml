@@ -94,7 +94,7 @@ jobs:
             exit 1
           fi
           echo "IP da instância: $INSTANCE_IP"
-
+          
           KEY_PATH="$HOME/deployer_key.pem"
           JAR_PATH="${{ env.JAR_PATH }}"
           
@@ -111,18 +111,16 @@ jobs:
           export AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
           export AWS_REGION=${{ secrets.AWS_REGION }}
           echo "Sucesso! Conexão bem sucedida e variáveis de ambiente AWS configuradas."
-
-          # Copie o JAR para a instância EC2
-          echo "Copiando JAR para a instância..."
-          scp -o "StrictHostKeyChecking=no" -i "$KEY_PATH" "$JAR_PATH" ec2-user@$INSTANCE_IP:/path/to/cliente-1.0-SNAPSHOT.jar
-
+          
+          # Crie o diretório de destino, se não existir
+          mkdir -p /home/ec2-user     
+         
           # Verifique se o arquivo JAR existe
-          if [ ! -f "/path/to/cliente-1.0-SNAPSHOT.jar" ]; then
-            echo "Erro: Arquivo JAR não encontrado em /path/to/cliente-1.0-SNAPSHOT.jar."
+          if [ ! -f "/home/ec2-user/cliente-1.0-SNAPSHOT.jar" ]; then
+            echo "Erro: Arquivo JAR não encontrado em /home/ec2-user/cliente-1.0-SNAPSHOT.jar."
             exit 1
           fi
-
+          
           # Inicie a aplicação
-          nohup java -jar /path/to/cliente-1.0-SNAPSHOT.jar > /dev/null 2>&1 &
+          nohup java -jar /home/ec2-user/cliente-1.0-SNAPSHOT.jar > /dev/null 2>&1 &
           EOF
-          echo "Aplicação iniciada na instância."
